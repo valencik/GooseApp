@@ -23,8 +23,10 @@ import org.http4s.client.Client
 import org.http4s.ember.server._
 import org.http4s.ember.client.EmberClientBuilder
 import org.http4s.HttpRoutes
+import cats.effect.IOApp
+import cats.effect.ExitCode
 
-trait GooseApp {
+trait GooseApp extends IOApp {
 
   def routes: HttpRoutes[IO]
 
@@ -39,7 +41,7 @@ trait GooseApp {
       .unsafeRunSync()
       ._1
 
-  final def main(args: Array[String]): Unit = {
+  def run(args: List[String]): IO[ExitCode] = {
     val server = EmberServerBuilder
       .default[IO]
       .withHost(ipv4"0.0.0.0")
@@ -47,7 +49,7 @@ trait GooseApp {
       .withHttpApp(httpApp)
       .build
       .use(_ => IO.never)
-      .void
-    server.unsafeRunSync()
+      .as(ExitCode.Success)
+    server
   }
 }
