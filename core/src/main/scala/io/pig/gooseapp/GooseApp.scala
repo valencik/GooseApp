@@ -17,7 +17,6 @@
 package io.pig.gooseapp
 
 import cats.effect.IO
-import cats.effect.unsafe.implicits.global
 import com.comcast.ip4s._
 import org.http4s.client.Client
 import org.http4s.ember.server._
@@ -28,26 +27,25 @@ import cats.effect.ExitCode
 
 trait GooseApp extends IOApp {
 
-  def routes: HttpRoutes[IO]
+  def routes(client: Client[IO]): HttpRoutes[IO]
 
-  def httpApp = routes.orNotFound
+  def httpApp(client: Client[IO]) = routes(client).orNotFound
 
-  // TODO might be nice to finalize the client
-  final lazy val httpClient: Client[IO] =
+  def setupClient =
     EmberClientBuilder
       .default[IO]
       .build
-      .allocated
-      .unsafeRunSync()
-      ._1
 
   def run(args: List[String]): IO[ExitCode] = {
-    val server = EmberServerBuilder
-      .default[IO]
-      .withHost(ipv4"0.0.0.0")
-      .withPort(port"8080")
-      .withHttpApp(httpApp)
-      .build
+    val server = setupClient
+      .flatMap { c =>
+        EmberServerBuilder
+          .default[IO]
+          .withHost(ipv4"0.0.0.0")
+          .withPort(port"8080")
+          .withHttpApp(httpApp(c))
+          .build
+      }
       .use(_ => IO.never)
       .as(ExitCode.Success)
     server
