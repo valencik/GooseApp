@@ -22,7 +22,7 @@ ThisBuild / scalaVersion := Scala213 // the default Scala
 
 val Http4sVersion = "0.23.15"
 
-lazy val root = tlCrossRootProject.aggregate(core)
+lazy val root = tlCrossRootProject.aggregate(core, example)
 
 lazy val core = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
@@ -41,5 +41,11 @@ lazy val core = crossProject(JVMPlatform, JSPlatform)
       "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test
     )
   )
+
+lazy val example = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("example"))
+  .enablePlugins(NoPublishPlugin)
+  .dependsOn(core)
 
 lazy val docs = project.in(file("site")).enablePlugins(TypelevelSitePlugin)

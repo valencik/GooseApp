@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-package io.pig.gooseapp
-
 import cats.effect.IO
+import io.pig.gooseapp.GooseApp
 import org.http4s._
 import org.http4s.dsl.io._
-import org.http4s.client.Client
 
-object Main extends GooseApp.WithHttpClient {
+object GooseAppEx extends GooseApp {
 
-  def routes(client: Client[IO]) = HttpRoutes.of[IO] {
-    case GET -> Root / "hello" / name =>
-      Ok(s"Hello, $name.")
+  def routes() = HttpRoutes.of[IO] { case GET -> Root / "hello" / name =>
+    Ok(s"Hello, $name.")
   }
 
 }
