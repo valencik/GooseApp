@@ -21,7 +21,7 @@ import org.http4s._
 import org.http4s.dsl.io._
 import org.http4s.client.Client
 
-object Main extends GooseApp {
+object Main extends GooseApp.WithHttpClient {
 
   def routes(client: Client[IO]) = HttpRoutes.of[IO] {
     case GET -> Root / "hello" / name =>

@@ -27,27 +27,40 @@ import cats.effect.ExitCode
 
 trait GooseApp extends IOApp {
 
-  def routes(client: Client[IO]): HttpRoutes[IO]
+  def routes(): HttpRoutes[IO]
 
-  def httpApp(client: Client[IO]) = routes(client).orNotFound
-
-  def setupClient =
-    EmberClientBuilder
+  def run(args: List[String]): IO[ExitCode] =
+    EmberServerBuilder
       .default[IO]
+      .withHost(ipv4"0.0.0.0")
+      .withPort(port"8080")
+      .withHttpApp(routes().orNotFound)
       .build
-
-  def run(args: List[String]): IO[ExitCode] = {
-    val server = setupClient
-      .flatMap { c =>
-        EmberServerBuilder
-          .default[IO]
-          .withHost(ipv4"0.0.0.0")
-          .withPort(port"8080")
-          .withHttpApp(httpApp(c))
-          .build
-      }
       .use(_ => IO.never)
       .as(ExitCode.Success)
-    server
+}
+
+object GooseApp {
+  trait WithHttpClient extends IOApp {
+
+    def routes(client: Client[IO]): HttpRoutes[IO]
+
+    private def setupClient =
+      EmberClientBuilder
+        .default[IO]
+        .build
+
+    def run(args: List[String]): IO[ExitCode] =
+      setupClient
+        .flatMap { c =>
+          EmberServerBuilder
+            .default[IO]
+            .withHost(ipv4"0.0.0.0")
+            .withPort(port"8080")
+            .withHttpApp(routes(c).orNotFound)
+            .build
+        }
+        .use(_ => IO.never)
+        .as(ExitCode.Success)
   }
 }
